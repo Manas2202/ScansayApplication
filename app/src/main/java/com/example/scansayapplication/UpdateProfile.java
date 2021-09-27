@@ -29,6 +29,7 @@ public class UpdateProfile extends AppCompatActivity {
     private RetrofitInterface retrofitInterface;
     private String BASE_URL = "https://Scansay.manas2202.repl.co";
     private String userMobNum;
+    loading_dialog dialog;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,6 +39,7 @@ public class UpdateProfile extends AppCompatActivity {
         shopnameText = (EditText) findViewById(R.id.shopnameId);
         addressText = (EditText) findViewById(R.id.addressId);
         updateButton = (Button) findViewById(R.id.updateBtnId);
+        dialog = new loading_dialog(UpdateProfile.this);
         retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
@@ -59,6 +61,7 @@ public class UpdateProfile extends AppCompatActivity {
         updateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                dialog.startLoadingAnimation();
                 String upShopName = shopnameText.getText().toString();
                 String upUserName = usernameText.getText().toString();
                 String upAddress = addressText.getText().toString();
@@ -73,6 +76,7 @@ public class UpdateProfile extends AppCompatActivity {
                     @Override
                     public void onResponse(Call<Void> call, Response<Void> response) {
                         if(response.code() == 200){
+                            dialog.dismissDialog();
                             Log.i("Message - ","Profile Updated Successfully");
                             if(db.clearUserTable()){
                                 Boolean x = db.insertUserData(upUserName,userMobNum,upShopName,upAddress);
@@ -83,11 +87,13 @@ public class UpdateProfile extends AppCompatActivity {
                                 }
                             }
                         }else{
+                            dialog.dismissDialog();
                             Log.i("Error - ","UnSuccessful User Update transfer");
                         }
                     }
                     @Override
                     public void onFailure(Call<Void> call, Throwable t) {
+                        dialog.dismissDialog();
                         Log.i("Failure - ",t.toString());
                         Log.i("Failure - ","Nhe hua");
                     }

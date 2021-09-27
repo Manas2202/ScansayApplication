@@ -37,9 +37,11 @@ import com.example.scansayapplication.PaymentListModel;
 import com.example.scansayapplication.R;
 import com.example.scansayapplication.Responsedata;
 import com.example.scansayapplication.RetrofitInterface;
+import com.example.scansayapplication.UpdateProfile;
 import com.example.scansayapplication.UserRegister;
 import com.example.scansayapplication.UserSqlDb;
 import com.example.scansayapplication.databinding.FragmentNotificationsBinding;
+import com.example.scansayapplication.loading_dialog;
 import com.example.scansayapplication.optVerification;
 
 import java.util.ArrayList;
@@ -65,6 +67,7 @@ public class NotificationsFragment extends Fragment  implements ListAdapter.List
     Retrofit retrofit;
     RetrofitInterface retrofitInterface;
     TextView transactionNumText,noDataText,transactionAmountText;
+    loading_dialog dialog;
     private String dateValue;
     private String BASE_URL = "https://Scansay.manas2202.repl.co";
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -78,6 +81,8 @@ public class NotificationsFragment extends Fragment  implements ListAdapter.List
                 .build();
         retrofitInterface = retrofit.create(RetrofitInterface.class);
         getDateButton = (Button) binding.setDateButton;
+        dialog = new loading_dialog(getActivity());
+        dialog.startLoadingAnimation();
         getDateButton.setText(getTodaysDate());
         initData();
         initDatePicker();
@@ -110,6 +115,7 @@ public class NotificationsFragment extends Fragment  implements ListAdapter.List
             @Override
             public void onResponse(Call<List<PaymentListModel>> call, Response<List<PaymentListModel>> response) {
                 if(response.code() == 200){
+                    dialog.dismissDialog();
                     Log.i("Message - ","Data Fetched");
                     List<PaymentListModel> dataList = response.body();
                     Log.i("Size - ",String.valueOf(dataList.size()));
@@ -134,6 +140,7 @@ public class NotificationsFragment extends Fragment  implements ListAdapter.List
             }
             @Override
             public void onFailure(Call<List<PaymentListModel>> call, Throwable t) {
+                dialog.dismissDialog();
                 Log.i("Failure - ",t.toString());
                 Log.i("Failure - ","Nhe hua");
             }
@@ -167,6 +174,7 @@ public class NotificationsFragment extends Fragment  implements ListAdapter.List
                 month = month+1;
                 String date = makeDateString(day,month,year);
                 getDateButton.setText(date);
+                dialog.startLoadingAnimation();
                 if(date == dateValue){
 
                 }else {

@@ -46,6 +46,7 @@ public class optVerification extends AppCompatActivity {
     private String TAG = "Notification";
     private AlertDialog enableNotificationListenerAlertDialog;
     private ImageChangeBroadcastReceiver imageChangeBroadcastReceiver;
+    loading_dialog dialog;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,6 +54,7 @@ public class optVerification extends AppCompatActivity {
         this.getSupportActionBar().hide();
         Intent intent = getIntent();
         mobNum = intent.getStringExtra("mobNum");
+        dialog = new loading_dialog(optVerification.this);
         retrofit = new Retrofit.Builder()
         .baseUrl(BASE_URL)
         .addConverterFactory(GsonConverterFactory.create())
@@ -71,6 +73,7 @@ public class optVerification extends AppCompatActivity {
         otpSubBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                dialog.startLoadingAnimation();
                 String otp = otpInputObj.getText().toString();
                 retrofitInterface = retrofit.create(RetrofitInterface.class);
                 HashMap<String, String> map = new HashMap<>();
@@ -83,41 +86,45 @@ public class optVerification extends AppCompatActivity {
                         Log.i("Response Code - ",String.valueOf(response.code()));
                         if(response.code() == 200){
                             Log.i("Message - ","Logged In");
+                            dialog.dismissDialog();
                             List<LoginResponseData> dataList = response.body();
                             String username = dataList.get(0).getUserName();
                             String userMobNum = dataList.get(0).getUserMobNum();
                             String shopname = dataList.get(0).getShopname();
                             String address = dataList.get(0).getAddress();
                             Boolean x = db.insertUserData(username,userMobNum,shopname,address);
-                        if(x){
-                            Log.i("Message - ","Db User Done");
-                            Intent intent = new Intent(optVerification.this,MainActivity.class);
-                            startActivity(intent);
-                        }else{
-                            Log.i("Message - ","Db User Not Done");
+                            if(x){
+                                Log.i("Message - ","Db User Done");
+                                Intent intent = new Intent(optVerification.this,MainActivity.class);
+                                startActivity(intent);
+                            }else{
+                                Log.i("Message - ","Db User Not Done");
+                            }
                         }
-                    }
-                    else if(response.code() == 201){
-                        Log.i("Message - ","Registered");
-                        Intent intent = new Intent(optVerification.this, UserRegister.class);
-                        intent.putExtra("mobNum", mobNum);
-                        startActivity(intent);
-                    }else if(response.code() == 300){
-                        Log.i("Message - ","Incorrect Otp");
-                    }else{
-                        Log.i("Error - ","UnSuccessful User Data transfer");
-                    }
-                    }
-                    @Override
-                    public void onFailure(Call<List<LoginResponseData>> call, Throwable t) {
-                        Log.i("Failure - ",t.toString());
-                        Log.i("Failure - ","Nhe hua");
-                    }
-                });
+                        else if(response.code() == 201){
+                            Log.i("Message - ","Registered");
+                            Intent intent = new Intent(optVerification.this, UserRegister.class);
+                            intent.putExtra("mobNum", mobNum);
+                            startActivity(intent);
+                        }else if(response.code() == 300){
+                            dialog.dismissDialog();
+                            Log.i("Message - ","Incorrect Otp");
+                        }else{
+                            dialog.dismissDialog();
+                            Log.i("Error - ","UnSuccessful User Data transfer");
+                        }
+                        }
+                        @Override
+                        public void onFailure(Call<List<LoginResponseData>> call, Throwable t) {
+                            dialog.dismissDialog();
+                            Log.i("Failure - ",t.toString());
+                            Log.i("Failure - ","Nhe hua");
+                        }
+                    });
 
-            }
-        });
-    }
+                }
+            });
+        }
 
     private boolean isNotificationServiceEnabled(){
         String pkgName = getPackageName();

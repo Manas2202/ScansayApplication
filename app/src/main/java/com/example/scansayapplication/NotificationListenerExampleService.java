@@ -65,156 +65,156 @@ public class NotificationListenerExampleService extends NotificationListenerServ
         int notificationCode = matchNotificationCode(sbn);
         Cursor c = db.getData();
         if(c.getCount() > 0){
-            while(c.moveToNext()){
+            while(c.moveToNext()) {
                 username = c.getString(0);
                 userNumber = c.getString(1);
             }
-        }
-        if(notificationCode == InterceptedNotificationCode.SMS_NOTIFICATIONS_CODE){
-            String title = String.valueOf(sbn.getNotification().extras.get(Notification.EXTRA_TITLE));
-            String content = String.valueOf(sbn.getNotification().extras.get(Notification.EXTRA_TEXT));
-            if(content.contains("Your OTP:")) {
-                Cursor data = db.getData();
-                if(data.getCount() == 0){
-                    String[] contentArr = content.split(": ", 0);
-                    Intent intent = new Intent("com.github.chagall.notificationlistenerexample");
-                    intent.putExtra("Title", title);
-                    intent.putExtra("Content", contentArr[0]);
-                    intent.putExtra("OTP", contentArr[1]);
-                    intent.putExtra("Notification Code", notificationCode);
-                    sendBroadcast(intent);
+            if(notificationCode == InterceptedNotificationCode.SMS_NOTIFICATIONS_CODE){
+                String title = String.valueOf(sbn.getNotification().extras.get(Notification.EXTRA_TITLE));
+                String content = String.valueOf(sbn.getNotification().extras.get(Notification.EXTRA_TEXT));
+                if(content.contains("Your OTP:")) {
+                    Cursor data = db.getData();
+                    if(data.getCount() == 0){
+                        String[] contentArr = content.split(": ", 0);
+                        Intent intent = new Intent("com.github.chagall.notificationlistenerexample");
+                        intent.putExtra("Title", title);
+                        intent.putExtra("Content", contentArr[0]);
+                        intent.putExtra("OTP", contentArr[1]);
+                        intent.putExtra("Notification Code", notificationCode);
+                        sendBroadcast(intent);
+                    }
                 }
             }
-        }
-        else if(notificationCode == InterceptedNotificationCode.GOOGLEPAY_CODE){
-            String paymentDataStr = String.valueOf(sbn.getNotification().extras.get(Notification.EXTRA_TITLE));
-            if(paymentDataStr.contains(" paid you ₹")) {
+            else if(notificationCode == InterceptedNotificationCode.GOOGLEPAY_CODE){
+                String paymentDataStr = String.valueOf(sbn.getNotification().extras.get(Notification.EXTRA_TITLE));
+                if(paymentDataStr.contains(" paid you ₹")) {
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+                        cancelNotification(sbn.getPackageName(), sbn.getTag(), sbn.getId());
+                    }
+                    else {
+                        cancelNotification(sbn.getKey());
+                    }
+                    String[] paymentArr = paymentDataStr.split(" paid you ₹", 0);
+                    Calendar calendar = Calendar.getInstance();
+                    SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+                    String strDate = sdf.format(calendar.getTime());
+                    String[] dateArr = strDate.split(" ", 0);
+                    Log.d("Date","DATE : " + strDate);
+                    HashMap<String, String> map = new HashMap<>();
+                    map.put("senderName",paymentArr[0]);
+                    map.put("paymentAmount",paymentArr[1]);
+                    map.put("paymentApp","Google Pay");
+                    map.put("userName",username);
+                    map.put("paymentDate",dateArr[0]);
+                    map.put("userNumber",userNumber);
+                    map.put("paymentTime",dateArr[1]);
+                    Log.i("Sender Name - ",paymentArr[0]);
+                    Log.i("Sender Name - ",paymentArr[1]);
+                    Log.i("Sender Name - ","Google Pay");
+                    Log.i("Sender Name - ",username);
+                    Log.i("Sender Name - ",dateArr[0]);
+                    Log.i("Sender Name - ",userNumber);
+                    Log.i("Sender Name - ",dateArr[1]);
+                    Call<Void> call = retrofitInterface.executePaymentSendRequest(map);
+                    call.enqueue(new Callback<Void>() {
+                        @Override
+                        public void onResponse(Call<Void> call, Response<Void> response) {
+                            if(response.code() == 201){
+                                Log.i("Message - ","Google Pay Payment Received");
+                            }
+                        }
+                        @Override
+                        public void onFailure(Call<Void> call, Throwable t) {
+                            Log.i("Failure - ",t.toString());
+                            Log.i("Failure - ","Nhe hua");
+                        }
+                    });
+                    Intent intent = new Intent("com.github.chagall.notificationlistenerexample");
+                    intent.putExtra("Notification Code", notificationCode);
+                    sendBroadcast(intent);
+                }else{
+
+                }
+            }
+            else if(notificationCode == InterceptedNotificationCode.WHATSAPP_CODE){
+                String msg = String.valueOf(sbn.getNotification().extras.get(Notification.EXTRA_TEXT));
+                Log.i("Msg - ",msg);
+                Intent intent = new  Intent("com.github.chagall.notificationlistenerexample");
+                intent.putExtra("Notification Code", notificationCode);
+                sendBroadcast(intent);
+            }
+            else if(notificationCode == InterceptedNotificationCode.PHONEPE_CODE) {
+                //sender name , username , paymentDate , paymentTime , userNumber , paymentApp ,
+
+                //fetching data
+                String titleText = String.valueOf(sbn.getNotification().extras.get(Notification.EXTRA_TITLE));
+                String dataText = String.valueOf(sbn.getNotification().extras.get(Notification.EXTRA_TEXT));
+
+                //Stopping multiple code execution
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
                     cancelNotification(sbn.getPackageName(), sbn.getTag(), sbn.getId());
                 }
                 else {
                     cancelNotification(sbn.getKey());
                 }
-                String[] paymentArr = paymentDataStr.split(" paid you ₹", 0);
-                Calendar calendar = Calendar.getInstance();
-                SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-                String strDate = sdf.format(calendar.getTime());
-                String[] dateArr = strDate.split(" ", 0);
-                Log.d("Date","DATE : " + strDate);
-                HashMap<String, String> map = new HashMap<>();
-                map.put("senderName",paymentArr[0]);
-                map.put("paymentAmount",paymentArr[1]);
-                map.put("paymentApp","Google Pay");
-                map.put("userName",username);
-                map.put("paymentDate",dateArr[0]);
-                map.put("userNumber",userNumber);
-                map.put("paymentTime",dateArr[1]);
-                Log.i("Sender Name - ",paymentArr[0]);
-                Log.i("Sender Name - ",paymentArr[1]);
-                Log.i("Sender Name - ","Google Pay");
-                Log.i("Sender Name - ",username);
-                Log.i("Sender Name - ",dateArr[0]);
-                Log.i("Sender Name - ",userNumber);
-                Log.i("Sender Name - ",dateArr[1]);
-                Call<Void> call = retrofitInterface.executePaymentSendRequest(map);
-                call.enqueue(new Callback<Void>() {
-                    @Override
-                    public void onResponse(Call<Void> call, Response<Void> response) {
-                        if(response.code() == 201){
-                            Log.i("Message - ","Google Pay Payment Received");
-                        }
-                    }
-                    @Override
-                    public void onFailure(Call<Void> call, Throwable t) {
-                        Log.i("Failure - ",t.toString());
-                        Log.i("Failure - ","Nhe hua");
-                    }
-                });
-                Intent intent = new Intent("com.github.chagall.notificationlistenerexample");
-                intent.putExtra("Notification Code", notificationCode);
-                sendBroadcast(intent);
-            }else{
 
-            }
-        }
-        else if(notificationCode == InterceptedNotificationCode.WHATSAPP_CODE){
-            String msg = String.valueOf(sbn.getNotification().extras.get(Notification.EXTRA_TEXT));
-            Log.i("Msg - ",msg);
-            Intent intent = new  Intent("com.github.chagall.notificationlistenerexample");
-            intent.putExtra("Notification Code", notificationCode);
-            sendBroadcast(intent);
-        }
-        else if(notificationCode == InterceptedNotificationCode.PHONEPE_CODE) {
-            //sender name , username , paymentDate , paymentTime , userNumber , paymentApp ,
+                //checking the notification
+                if(dataText.contains(" has been sent to ")) {
+                    //fetching sendername
+                    String[] senderDataStr1 = titleText.split(":", 0);
+                    String[] senderDataStrMain = senderDataStr1[0].split(" from ",0);
+                    String senderName = senderDataStrMain[1];
 
-            //fetching data
-            String titleText = String.valueOf(sbn.getNotification().extras.get(Notification.EXTRA_TITLE));
-            String dataText = String.valueOf(sbn.getNotification().extras.get(Notification.EXTRA_TEXT));
+                    //creating current date and time
+                    Calendar calendar = Calendar.getInstance();
+                    SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+                    String strDate = sdf.format(calendar.getTime());
+                    String[] dateArr = strDate.split(" ", 0);
 
-            //Stopping multiple code execution
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-                cancelNotification(sbn.getPackageName(), sbn.getTag(), sbn.getId());
-            }
-            else {
-                cancelNotification(sbn.getKey());
-            }
+                    //fetching payment amount
+                    String[] paymentAmountStr1 = dataText.split(" has been sent to ", 0);
+                    String paymentAmount = paymentAmountStr1[0].substring(1);
 
-            //checking the notification
-            if(dataText.contains(" has been sent to ")) {
-                //fetching sendername
-                String[] senderDataStr1 = titleText.split(":", 0);
-                String[] senderDataStrMain = senderDataStr1[0].split(" from ",0);
-                String senderName = senderDataStrMain[1];
-
-                //creating current date and time
-                Calendar calendar = Calendar.getInstance();
-                SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-                String strDate = sdf.format(calendar.getTime());
-                String[] dateArr = strDate.split(" ", 0);
-
-                //fetching payment amount
-                String[] paymentAmountStr1 = dataText.split(" has been sent to ", 0);
-                String paymentAmount = paymentAmountStr1[0].substring(1);
-
-                if(x == 0) {
-                    x++;
-                    //logging full data
-                    Log.i("senderName - ", senderName);
-                    Log.i("paymentAmount - ", paymentAmount);
-                    Log.i("Date - ", dateArr[0]);
-                    Log.i("Time - ", dateArr[1]);
-                    Log.i("username - ", username);
-                    Log.i("userNumber - ", userNumber);
-                    Log.i("App - ", "Phone Pe");
-                    HashMap<String, String> map = new HashMap<>();
-                    map.put("senderName", senderName);
-                    map.put("paymentAmount", paymentAmount);
-                    map.put("paymentApp", "Phone Pe");
-                    map.put("userName", username);
-                    map.put("paymentDate", dateArr[0]);
-                    map.put("userNumber", userNumber);
-                    map.put("paymentTime", dateArr[1]);
-                    Call<Void> call = retrofitInterface.executePaymentSendRequest(map);
-                    call.enqueue(new Callback<Void>() {
-                        @Override
-                        public void onResponse(Call<Void> call, Response<Void> response) {
-                            if (response.code() == 201) {
-                                Log.i("Message - ", "Phone Pe Payment Received");
-                                Intent intent = new Intent("com.github.chagall.notificationlistenerexample");
-                                intent.putExtra("Notification Code", notificationCode);
-                                sendBroadcast(intent);
+                    if(x == 0) {
+                        x++;
+                        //logging full data
+                        Log.i("senderName - ", senderName);
+                        Log.i("paymentAmount - ", paymentAmount);
+                        Log.i("Date - ", dateArr[0]);
+                        Log.i("Time - ", dateArr[1]);
+                        Log.i("username - ", username);
+                        Log.i("userNumber - ", userNumber);
+                        Log.i("App - ", "Phone Pe");
+                        HashMap<String, String> map = new HashMap<>();
+                        map.put("senderName", senderName);
+                        map.put("paymentAmount", paymentAmount);
+                        map.put("paymentApp", "Phone Pe");
+                        map.put("userName", username);
+                        map.put("paymentDate", dateArr[0]);
+                        map.put("userNumber", userNumber);
+                        map.put("paymentTime", dateArr[1]);
+                        Call<Void> call = retrofitInterface.executePaymentSendRequest(map);
+                        call.enqueue(new Callback<Void>() {
+                            @Override
+                            public void onResponse(Call<Void> call, Response<Void> response) {
+                                if (response.code() == 201) {
+                                    Log.i("Message - ", "Phone Pe Payment Received");
+                                    Intent intent = new Intent("com.github.chagall.notificationlistenerexample");
+                                    intent.putExtra("Notification Code", notificationCode);
+                                    sendBroadcast(intent);
+                                }
                             }
-                        }
 
-                        @Override
-                        public void onFailure(Call<Void> call, Throwable t) {
-                            Log.i("Failure - ", t.toString());
-                            Log.i("Failure - ", "Nhe hua");
-                        }
-                    });
+                            @Override
+                            public void onFailure(Call<Void> call, Throwable t) {
+                                Log.i("Failure - ", t.toString());
+                                Log.i("Failure - ", "Nhe hua");
+                            }
+                        });
+                    }
+                }else{
+
                 }
-            }else{
-
             }
         }
     }

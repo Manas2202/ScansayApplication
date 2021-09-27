@@ -15,6 +15,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import androidx.appcompat.app.AppCompatActivity;
@@ -44,6 +45,11 @@ private ActivityMainBinding binding;
     public static int[] gPayArr = new int[3000];
     public static int gPayCounter = 0;
 
+    //testing loader
+    private ProgressBar pgsBar;
+    private Button showbtn, hidebtn;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -56,6 +62,9 @@ private ActivityMainBinding binding;
                 .build();
         retrofitInterface = retrofit.create(RetrofitInterface.class);
         BottomNavigationView navView = findViewById(R.id.nav_view);
+//        pgsBar = (ProgressBar) findViewById(R.id.pBar);
+
+//        pgsBar.setVisibility(View.VISIBLE);
         logoutBtn = (Button) findViewById(R.id.logoutBtn);
         shopName = (TextView) findViewById(R.id.shopNameId);
         mobNum = (TextView) findViewById(R.id.mobNumId);

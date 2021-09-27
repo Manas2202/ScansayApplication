@@ -26,6 +26,7 @@ public class Login extends AppCompatActivity {
     private StatusBarNotification sbn;
     private RetrofitInterface retrofitInterface;
     private String BASE_URL = "https://Scansay.manas2202.repl.co";
+    loading_dialog dialog;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,9 +34,11 @@ public class Login extends AppCompatActivity {
         this.getSupportActionBar().hide();
         loginBtn = (Button) findViewById(R.id.loginBtnId);
         mobNumObj = (EditText) findViewById(R.id.mobNumId);
+        dialog = new loading_dialog(Login.this);
         loginBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                dialog.startLoadingAnimation();
                 String mobNum = mobNumObj.getText().toString();
                 retrofit = new Retrofit.Builder()
                         .baseUrl(BASE_URL)
@@ -50,15 +53,18 @@ public class Login extends AppCompatActivity {
                     public void onResponse(Call<Void> call, Response<Void> response) {
                         if(response.code() == 201){
                             Log.i("Message - ","Successful data transfer");
+                            dialog.dismissDialog();
                             Intent intent = new Intent(Login.this, optVerification.class);
                             intent.putExtra("mobNum", mobNum);
                             startActivity(intent);
                         }else{
                             Log.i("Error - ","UnSuccessful data transfer");
+                            dialog.dismissDialog();
                         }
                     }
                     @Override
                     public void onFailure(Call<Void> call, Throwable t) {
+                        dialog.dismissDialog();
                         Log.i("Failure - ",t.toString());
                         Log.i("Failure - ","Nhe hua");
                     }
